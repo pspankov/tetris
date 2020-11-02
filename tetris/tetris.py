@@ -131,7 +131,7 @@ class Tetris:
         self.remove_block()
         self.current_block.move_left(times)
         if self.collides():
-            self.current_block.move_right()
+            self.current_block.move_right(times)
         self.set_block()
 
     def move_right(self, times=1):
@@ -141,7 +141,7 @@ class Tetris:
         self.remove_block()
         self.current_block.move_right(times)
         if self.collides():
-            self.current_block.move_left()
+            self.current_block.move_left(times)
         self.set_block()
 
     def rotate(self):
@@ -151,17 +151,21 @@ class Tetris:
         self.remove_block()
         self.current_block.rotate()
 
+        # fix cases where block can't rotate if all the way to the left or right
+
+        # if block is next to left wall move to the right and then rotate
         if self.collides() and self.current_block.position.col <= 0:
             for i in range(self.current_block.cols):
                 self.current_block.move_right()
                 if not self.collides():
                     break
-        # @TODO
-        # if self.collides() and (self.current_block.position.cols + self.current_block.cols - 1) >= self.grid.last_row:
-        #     for i in range(self.current_block.cols):
-        #         self.current_block.move_left()
-        #         if not self.collides():
-        #             break
+
+        # if block is next to right wall move to the left and then rotate
+        if self.collides() and (self.current_block.position.col + self.current_block.cols) >= self.grid.last_col:
+            for i in range(self.current_block.cols):
+                self.current_block.move_left()
+                if not self.collides():
+                    break
 
         if self.collides():
             # rotating 3 times returns it to it's original position
