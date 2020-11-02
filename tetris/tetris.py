@@ -26,6 +26,8 @@ class Tetris:
         self.pause = True
         self.game_over = False
         self.holes = 0
+        self.bumpiness = 0
+        self.total_bumpiness = 0
 
     def run(self):
         if not self.pause:
@@ -115,7 +117,8 @@ class Tetris:
 
             self.clean_complete_rows()
             self.current_block = None
-            self.holes = self.calc_holes()
+            self.holes = self.get_holes()
+            self.total_bumpiness, self.max_bumpiness = self.get_bumpines()
             self.current_block = self.next_block()
             self.set_block()
             return False
@@ -187,7 +190,7 @@ class Tetris:
             self.total_lines += lines_cleared
             self.score += self.POINTS[lines_cleared] * (self.level + 1)
 
-    def calc_holes(self):
+    def get_holes(self):
         holes = 0
 
         for row in transpose(self.grid.grid):
@@ -196,3 +199,21 @@ class Tetris:
                     holes += row[idx+1:].count(0)
                     break
         return holes
+
+    def get_bumpines(self):
+        total_bumpiness = 0
+        max_bumpiness = 0
+        t_grid = transpose(self.grid.grid)
+        cols_ids = []
+        for col in t_grid:
+            cols_ids.append(next((i for i, x in enumerate(col) if x), self.grid.rows))
+
+        for i, idx in enumerate(cols_ids):
+            try:
+                bumpiness = abs(idx - cols_ids[i+1])
+                max_bumpiness = max(bumpiness, max_bumpiness)
+                total_bumpiness += bumpiness
+            except (TypeError, IndexError) as e:
+                pass
+
+        return total_bumpiness, max_bumpiness

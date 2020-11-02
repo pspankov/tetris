@@ -10,7 +10,6 @@ class Colors(Enum):
     GREEN = 5
     PURPLE = 6
     RED = 7
-    PINK = 8
 
 
 class Position:

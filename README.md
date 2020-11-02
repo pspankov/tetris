@@ -2,6 +2,5 @@
 
 Run the game
 ```bash
-python3 main.py
+python3 tetris
 ```
- 
