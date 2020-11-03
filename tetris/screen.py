@@ -64,17 +64,14 @@ class Screen:
         self._quit = True
 
     def draw_score(self):
-        self.score_pen.clear()
-        self.score_pen.color(self.TEXT_COLOR)
-        self.score_pen.goto(self.block_size, self.height/2 - self.block_size*5)
-        self.score_pen.write(f'Score: {self.tetris.score} \nLines: {self.tetris.total_lines}',
+        self.t.color(self.TEXT_COLOR)
+        self.t.goto(self.block_size, self.block_size*4)
+        self.t.write(f'Score: {self.tetris.score} \nLines: {self.tetris.total_lines}',
                              font=('', 18, 'normal'))
-        self.score_pen.up()
 
     def draw_border(self):
         top_left = Position(self.height/2 - self.block_size + 1, -self.width/2 + self.block_size - 1)
         self.static_pen.color('gray')
-        # self.static_pen.up()
         self.static_pen.goto(top_left.col, top_left.row)
         self.static_pen.down()
         self.static_pen.fd(self.grid_width + 2)
@@ -101,8 +98,19 @@ class Screen:
         self.static_pen.write(info, font=('', 11, 'normal'))
         self.static_pen.up()
 
+    def draw_next_block(self):
+        top_left = Position(self.height/2 - self.block_size*2, self.block_size*2)
+
+        for row in range(self.tetris.next_block.rows):
+            for col in range(self.tetris.next_block.cols):
+                screen_x = top_left.col + (col * self.block_size)
+                screen_y = top_left.row - (row * self.block_size)
+                self.t.color(Colors(self.tetris.next_block.shape[row][col]).name)
+                self.t.goto(screen_x, screen_y)
+                self.t.stamp()
+
+
     def draw_game_over(self):
-        self.t.clear()
         self.t.color(self.TEXT_COLOR)
         self.t.goto(-self.width/4 - self.block_size, 0)
         self.t.write('GAME OVER', font=('', 10, 'normal'))
@@ -120,10 +128,8 @@ class Screen:
                 screen_y = top_left.row - (row * self.block_size)
 
                 self.t.color(Colors(self.grid[row, col]).name)
-                self.t.shapesize(self.block_size / self.STAMP_SIZE)
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
-                self.t.up()
 
 
     def mainloop(self):
@@ -133,10 +139,11 @@ class Screen:
 
         while not self._quit:
             if self.tetris.game_over:
-                self.t.clear()
                 self.draw_game_over()
             else:
                 # self.s.update()
                 self.draw_grid()
+                self.draw_next_block()
                 self.draw_score()
+                
         self.s.bye()

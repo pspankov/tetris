@@ -19,24 +19,35 @@ class Tetris:
     def __init__(self, grid):
         self.grid = grid
         self.current_block = None
-        self.moving = False
+        self.next_block = None
+        self.pause = False
+        self.game_over = False
+        self.quit = False
         self.score = 0
         self.level = 0
         self.total_lines = 0
-        self.pause = False
-        self.game_over = False
+
         self.holes = 0
         self.bumpiness = 0
         self.total_bumpiness = 0
-        self.quit = False
 
     def run(self):
         if not self.pause:
             if self.current_block is None:
-                self.current_block = self.next_block()
+                self.current_block = self.create_block()
                 self.set_block()
-            else:
-                self.move_down()
+                self.next_block = self.create_block()
+            elif not self.move_down():
+                if self.current_block.position.row <= 0:
+                    self.game_over = True
+
+                self.clean_complete_rows()
+                self.current_block = None
+                self.holes = self.get_holes()
+                self.total_bumpiness, self.max_bumpiness = self.get_bumpines()
+                self.current_block = self.next_block
+                self.set_block()
+                self.next_block = self.create_block()
 
         time.sleep(self.DELAY)
 
@@ -61,7 +72,7 @@ class Tetris:
                 if self.current_block.shape[row][col] != 0:
                     self.grid[pos.row + row, pos.col + col] = 0
 
-    def next_block(self) -> Shape:
+    def create_block(self) -> Shape:
         # get random shape from all possible shapes that subclass parent
         shapes_list = Shape.__subclasses__()
         block = shapes_list[random.randint(0, len(shapes_list) - 1)]()
@@ -101,10 +112,11 @@ class Tetris:
         self.score = 0
         self.total_lines = 0
         self.current_block = None
+        self.next_block = None
 
     def move_down(self):
         if not self.current_block or self.pause:
-            return
+            return False
 
         self.remove_block()
         self.current_block.move_down()
@@ -112,21 +124,11 @@ class Tetris:
         if self.collides():
             self.current_block.move_up()
             self.set_block()
-
-            if self.current_block.position.row <= 0:
-                self.game_over = True
-
-            self.clean_complete_rows()
-            self.current_block = None
-            self.holes = self.get_holes()
-            self.total_bumpiness, self.max_bumpiness = self.get_bumpines()
-            self.current_block = self.next_block()
-            self.set_block()
             return False
-        else:
-            self.set_block()
-            self.score += 1
-            return True
+
+        self.set_block()
+        self.score += 1
+        return True
 
     def move_left(self, times=1):
         if not self.current_block or self.pause:
