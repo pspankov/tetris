@@ -1,8 +1,10 @@
+__version__ = 0.1
+
 from enum import Enum
 
 
 class Colors(Enum):
-    BLACK = 0
+    WHITE = 0
     LIGHTBLUE = 1
     BLUE = 2
     ORANGE = 3
@@ -46,10 +48,10 @@ class Grid:
         self.grid = self.create()
 
     def __str__(self):
-        print(self.grid)
+        return self.grid
 
     def __repr__(self):
-        print(self.grid)
+        return self.grid
 
     def __getitem__(self, pos):
         try:

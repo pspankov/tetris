@@ -1,10 +1,12 @@
 import turtle
-from . import Position, Grid, Colors
-from .tetris import Tetris
+from tetris import Position, Grid, Colors
+from tetris.game import Tetris
 
 
 class Screen:
     STAMP_SIZE = 20
+    BACKGROUND_COLOR = 'white'
+    TEXT_COLOR = 'black'
 
     def __init__(self, grid: Grid, tetris: Tetris, block_size=20):
         self.grid = grid
@@ -16,15 +18,17 @@ class Screen:
         self.width = self.grid_width * 2 + self.block_size * 2
         self.height = self.grid_height + self.block_size * 2
 
+        self._quit = False
+
         self.s = self.init_screen()
         self.t = self.create_square_pen()
         self.score_pen = self.create_pen()
         self.static_pen = self.create_pen()
 
     def init_screen(self):
-        s = turtle.getscreen()
+        s = turtle.Screen()
         s.title('TETR1S by Pavel')
-        s.bgcolor('black')
+        s.bgcolor(self.BACKGROUND_COLOR)
         s.setup(width=self.width, height=self.height)
         s.tracer(0)
 
@@ -35,6 +39,7 @@ class Screen:
         s.onkeypress(self.tetris.rotate, 'w')
         s.onkeypress(self.tetris.move_down, 's')
         s.onkeypress(self.tetris.move_bottom, 'space')
+        s.onkeypress(self.quit, 'q')
         s.listen()
 
         return s
@@ -54,36 +59,36 @@ class Screen:
         t.shapesize(self.block_size / self.STAMP_SIZE)
         return t
 
-    def clear(self):
-        self.t.clear()
+    def quit(self):
+        self.tetris.quit = True
+        self._quit = True
 
     def draw_score(self):
         self.score_pen.clear()
-        self.score_pen.color('white')
-        self.score_pen.goto(self.block_size, self.height/2 - self.block_size*4)
+        self.score_pen.color(self.TEXT_COLOR)
+        self.score_pen.goto(self.block_size, self.height/2 - self.block_size*5)
         self.score_pen.write(f'Score: {self.tetris.score} \nLines: {self.tetris.total_lines}',
-                             font=('Arial', 18, 'normal'))
+                             font=('', 18, 'normal'))
         self.score_pen.up()
 
     def draw_border(self):
-        top_left = Position(self.height/2 - self.block_size, -self.width/2 + self.block_size)
-        self.static_pen.up()
-        self.static_pen.home()
+        top_left = Position(self.height/2 - self.block_size + 1, -self.width/2 + self.block_size - 1)
         self.static_pen.color('gray')
+        # self.static_pen.up()
         self.static_pen.goto(top_left.col, top_left.row)
         self.static_pen.down()
-        self.static_pen.fd(self.grid_width)
+        self.static_pen.fd(self.grid_width + 2)
         self.static_pen.right(90)
-        self.static_pen.fd(self.grid_height)
+        self.static_pen.fd(self.grid_height + 2)
         self.static_pen.right(90)
-        self.static_pen.fd(self.grid_width)
+        self.static_pen.fd(self.grid_width + 2)
         self.static_pen.right(90)
-        self.static_pen.fd(self.grid_height)
+        self.static_pen.fd(self.grid_height + 2)
         self.static_pen.up()
 
     def draw_info(self):
-        self.static_pen.color('white')
-        self.static_pen.goto(0 + self.block_size, -self.height / 4)
+        self.static_pen.color(self.TEXT_COLOR)
+        self.static_pen.goto(0 + self.block_size, -self.height / 2 + 20)
         info = 'Key commands: \r\n' \
                '<P> play/pause \n' \
                '<R> reset game \n' \
@@ -91,17 +96,20 @@ class Screen:
                '<D> move right \n' \
                '<W> rotate \n' \
                '<S> move down \n' \
-               '<SPACE> move bottom'
-        self.static_pen.write(info, font=('Arial', 10, 'normal'))
+               '<SPACE> move bottom \n' \
+               '<Q> quit'
+        self.static_pen.write(info, font=('', 11, 'normal'))
         self.static_pen.up()
 
     def draw_game_over(self):
-        self.t.color('white')
+        self.t.clear()
+        self.t.color(self.TEXT_COLOR)
         self.t.goto(-self.width/4 - self.block_size, 0)
-        self.t.write('GAME OVER', font=('Arial', 10, 'normal'))
+        self.t.write('GAME OVER', font=('', 10, 'normal'))
         self.t.up()
 
     def draw_grid(self):
+        self.t.clear()
         # top_left = Position(self.grid_height/2 - self.block_size/2, -self.grid_width/2 + self.block_size/2)
         row = self.height/2 - self.block_size - self.block_size/2
         col = -self.width/2 + self.block_size + self.block_size/2
@@ -109,24 +117,31 @@ class Screen:
 
         for row in range(self.grid.rows):
             for col in range(self.grid.cols):
-                screen_x = top_left.col + (col * 20)
-                screen_y = top_left.row - (row * 20)
-                self.t.color(Colors(self.grid[row, col]).name)
+                screen_x = top_left.col + (col * self.STAMP_SIZE)
+                screen_y = top_left.row - (row * self.STAMP_SIZE)
+                self.t.color('#999999')
+                self.t.shapesize(self.block_size / self.STAMP_SIZE)
                 self.t.up()
                 self.t.goto(screen_x, screen_y)
                 self.t.down()
                 self.t.stamp()
                 self.t.up()
+                self.t.shapesize(18 / self.STAMP_SIZE)
+                self.t.color(Colors(self.grid[row, col]).name)
+                self.t.goto(screen_x, screen_y)
+                self.t.stamp()
+                self.t.up()
 
     def mainloop(self):
-        while True:
+        self.static_pen.clear()
+        # self.draw_border()
+        self.draw_info()
+        while not self._quit:
             if self.tetris.game_over:
-                self.clear()
+                self.t.clear()
                 self.draw_game_over()
             else:
                 # self.s.update()
-                self.clear()
                 self.draw_grid()
-                self.draw_border()
-                self.draw_info()
                 self.draw_score()
+        self.s.bye()

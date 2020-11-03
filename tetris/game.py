@@ -23,11 +23,12 @@ class Tetris:
         self.score = 0
         self.level = 0
         self.total_lines = 0
-        self.pause = True
+        self.pause = False
         self.game_over = False
         self.holes = 0
         self.bumpiness = 0
         self.total_bumpiness = 0
+        self.quit = False
 
     def run(self):
         if not self.pause:
@@ -40,7 +41,7 @@ class Tetris:
         time.sleep(self.DELAY)
 
     def mainloop(self):
-        while True:
+        while not self.quit:
             self.run()
 
     def set_block(self):
