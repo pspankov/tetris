@@ -110,32 +110,27 @@ class Screen:
 
     def draw_grid(self):
         self.t.clear()
-        # top_left = Position(self.grid_height/2 - self.block_size/2, -self.grid_width/2 + self.block_size/2)
         row = self.height/2 - self.block_size - self.block_size/2
         col = -self.width/2 + self.block_size + self.block_size/2
         top_left = Position(row, col)
 
         for row in range(self.grid.rows):
             for col in range(self.grid.cols):
-                screen_x = top_left.col + (col * self.STAMP_SIZE)
-                screen_y = top_left.row - (row * self.STAMP_SIZE)
-                self.t.color('#999999')
-                self.t.shapesize(self.block_size / self.STAMP_SIZE)
-                self.t.up()
-                self.t.goto(screen_x, screen_y)
-                self.t.down()
-                self.t.stamp()
-                self.t.up()
-                self.t.shapesize(18 / self.STAMP_SIZE)
+                screen_x = top_left.col + (col * self.block_size)
+                screen_y = top_left.row - (row * self.block_size)
+
                 self.t.color(Colors(self.grid[row, col]).name)
+                self.t.shapesize(self.block_size / self.STAMP_SIZE)
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
                 self.t.up()
 
+
     def mainloop(self):
         self.static_pen.clear()
-        # self.draw_border()
+        self.draw_border()
         self.draw_info()
+
         while not self._quit:
             if self.tetris.game_over:
                 self.t.clear()
