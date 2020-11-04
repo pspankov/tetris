@@ -1,6 +1,7 @@
 import time
 import math
 import random
+from itertools import dropwhile
 from tetris import Position
 from tetris.shapes import Shape, OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock
 from tetris.utils import transpose
@@ -32,8 +33,6 @@ class Tetris:
 
                 self.clean_complete_rows()
                 self.current_block = None
-                self.holes = self.get_holes()
-                self.total_bumpiness, self.max_bumpiness = self.get_bumpines()
                 self.load_next_blocks()
         if delay:
             time.sleep(self.delay)
@@ -60,9 +59,6 @@ class Tetris:
         self.score = 0
         self.level = 0
         self.total_lines = 0
-        self.holes = 0
-        self.bumpiness = 0
-        self.total_bumpiness = 0
 
     def set_block(self):
         # set the current block on the grid
@@ -223,3 +219,16 @@ class Tetris:
                 pass
 
         return total_bumpiness, max_bumpiness
+
+
+    def get_height(self):
+        sum_height = 0
+        for col in transpose(self.grid.grid):
+            sum_height += len(list(dropwhile(lambda x: x == 0, col)))
+        return sum_height
+
+    def get_state(self):
+        holes = self.get_holes()
+        total_bumpiness, max_bumpiness = self.get_bumpines()
+        line_height = self.get_height()
+        return [self.total_lines, holes, total_bumpiness, line_height]
