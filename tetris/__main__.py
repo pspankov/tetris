@@ -7,6 +7,7 @@ from tetris.game import Tetris
 
 def main():
     grid = Grid(22, 10)
+    # mini_shapes = [shapes.MiniBlock, shapes.MiniOne, shapes.MiniTwo, shapes.MiniDiagTwo, shapes.MiniThree]
     tetris = Tetris(grid)
     screen = Screen(grid, tetris)
 

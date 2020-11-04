@@ -2,13 +2,11 @@ import time
 import math
 import random
 from tetris import Position
-from tetris.shapes import Shape
+from tetris.shapes import Shape, OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock
 from tetris.utils import transpose
 
 
 class Tetris:
-    DELAY = 1  # that's basically the speed of the game or what is the time between the piece is moved down
-
     # points that correspond to number of lines cleared at the same time
     # 1 line - 40 points
     # 2 lines - 100 points
@@ -16,27 +14,18 @@ class Tetris:
     # 4 lines - 1200 points
     POINTS = [40, 100, 300, 1200]
 
-    def __init__(self, grid):
+    def __init__(self, grid, shapes_list=None):
         self.grid = grid
-        self.current_block = None
-        self.next_block = None
-        self.pause = False
-        self.game_over = False
+        self.shapes_list = [OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock] \
+            if shapes_list is None else shapes_list
+        self.delay = 1  # that's basically the speed of the game or what is the time between the piece is moved down
         self.quit = False
-        self.score = 0
-        self.level = 0
-        self.total_lines = 0
+        self.reset_game(clear_grid=False)
 
-        self.holes = 0
-        self.bumpiness = 0
-        self.total_bumpiness = 0
-
-    def run(self):
+    def run(self, delay=True):
         if not self.pause:
             if self.current_block is None:
-                self.current_block = self.create_block()
-                self.set_block()
-                self.next_block = self.create_block()
+                self.load_next_blocks()
             elif not self.move_down():
                 if self.current_block.position.row <= 0:
                     self.game_over = True
@@ -45,15 +34,35 @@ class Tetris:
                 self.current_block = None
                 self.holes = self.get_holes()
                 self.total_bumpiness, self.max_bumpiness = self.get_bumpines()
-                self.current_block = self.next_block
-                self.set_block()
-                self.next_block = self.create_block()
-
-        time.sleep(self.DELAY)
+                self.load_next_blocks()
+        if delay:
+            time.sleep(self.delay)
 
     def mainloop(self):
         while not self.quit:
             self.run()
+
+    def play_pause(self):
+        if not self.game_over:
+            self.pause = not self.pause
+        else:
+            self.reset_game()
+
+    def reset_game(self, clear_grid=True):
+        if clear_grid:
+            self.grid.clear()
+
+        self.current_block = None
+        self.next_block = None
+        self.pause = False
+        self.game_over = False
+
+        self.score = 0
+        self.level = 0
+        self.total_lines = 0
+        self.holes = 0
+        self.bumpiness = 0
+        self.total_bumpiness = 0
 
     def set_block(self):
         # set the current block on the grid
@@ -64,6 +73,7 @@ class Tetris:
                     self.grid[pos.row + row, pos.col + col] = self.current_block.shape[row][col]
 
     def remove_block(self):
+        # remove the current block from the grid
         if not self.current_block:
             return
         pos = self.current_block.position
@@ -73,15 +83,22 @@ class Tetris:
                     self.grid[pos.row + row, pos.col + col] = 0
 
     def create_block(self) -> Shape:
-        # get random shape from all possible shapes that subclass parent
-        shapes_list = Shape.__subclasses__()
-        block = shapes_list[random.randint(0, len(shapes_list) - 1)]()
+        # get random shape from all possible shapes
+        block = self.shapes_list[random.randint(0, len(self.shapes_list) - 1)]()
         # calculate it's position - top center of the grid
         col = math.floor(self.grid.cols / 2) - math.ceil(len(block.shape) / 2)
         block.set_pos(Position(0, col))
         # randomly rotate the piece
         block.rotate(random.randint(0, 3))
         return block
+
+    def load_next_blocks(self):
+        if self.next_block is None:
+            self.next_block = self.create_block()
+
+        self.current_block = self.next_block
+        self.set_block()
+        self.next_block = self.create_block()
 
     def collides(self):
         # set the future position of the block
@@ -99,21 +116,6 @@ class Tetris:
                         return True
         return False
 
-    def play_pause(self):
-        if not self.game_over:
-            self.pause = not self.pause
-        else:
-            self.reset_game()
-
-    def reset_game(self):
-        self.grid.clear()
-        self.game_over = False
-        self.pause = False
-        self.score = 0
-        self.total_lines = 0
-        self.current_block = None
-        self.next_block = None
-
     def move_down(self):
         if not self.current_block or self.pause:
             return False
@@ -129,6 +131,11 @@ class Tetris:
         self.set_block()
         self.score += 1
         return True
+
+    def move_bottom(self):
+        while self.move_down():
+            pass
+        self.run(delay=False)
 
     def move_left(self, times=1):
         if not self.current_block or self.pause:
@@ -178,10 +185,6 @@ class Tetris:
             self.current_block.rotate(3)
         self.set_block()
 
-    def move_bottom(self):
-        while self.move_down():
-            pass
-
     def clean_complete_rows(self):
         # when row columns are filled we need the clear them out (the rules of the game :))
         lines_cleared = 0
@@ -199,7 +202,7 @@ class Tetris:
         for row in transpose(self.grid.grid):
             for idx, el in enumerate(row):
                 if el != 0:
-                    holes += row[idx+1:].count(0)
+                    holes += row[idx + 1:].count(0)
                     break
         return holes
 
@@ -213,7 +216,7 @@ class Tetris:
 
         for i, idx in enumerate(cols_ids):
             try:
-                bumpiness = abs(idx - cols_ids[i+1])
+                bumpiness = abs(idx - cols_ids[i + 1])
                 max_bumpiness = max(bumpiness, max_bumpiness)
                 total_bumpiness += bumpiness
             except (TypeError, IndexError) as e:

@@ -4,7 +4,7 @@ from enum import Enum
 
 
 class Colors(Enum):
-    WHITE = 0
+    BACKGROUND = 0
     LIGHTBLUE = 1
     BLUE = 2
     ORANGE = 3

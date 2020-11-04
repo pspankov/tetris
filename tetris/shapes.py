@@ -110,3 +110,41 @@ class SBlock(Shape):
                  [1, 1, 0],
                  [0, 0, 0]]
         super().__init__(color=Colors.GREEN, shape=shape)
+
+
+class MiniBlock(Shape):
+    def __init__(self):
+        shape = [[1, 1],
+                 [1, 1]]
+        super().__init__(color=Colors.RED, shape=shape)
+
+
+class MiniOne(Shape):
+    def __init__(self):
+        shape = [[0, 0],
+                 [0, 1]]
+        super().__init__(color=Colors.ORANGE, shape=shape)
+
+    def rotate(self, times=1):
+        return False
+
+
+class MiniTwo(Shape):
+    def __init__(self):
+        shape = [[1, 1],
+                 [0, 0]]
+        super().__init__(color=Colors.BLUE, shape=shape)
+
+
+class MiniDiagTwo(Shape):
+    def __init__(self):
+        shape = [[0, 1],
+                 [1, 0]]
+        super().__init__(color=Colors.PURPLE, shape=shape)
+
+
+class MiniThree(Shape):
+    def __init__(self):
+        shape = [[0, 1],
+                 [1, 1]]
+        super().__init__(color=Colors.GREEN, shape=shape)
