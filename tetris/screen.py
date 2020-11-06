@@ -154,6 +154,6 @@ class Screen:
 
     def draw_game_over(self):
         self.t.color(self.TEXT_COLOR)
-        self.t.goto(-self.width / 4 - self.block_size, 0)
-        self.t.write('GAME OVER', font=('', 10, 'normal'))
+        self.t.goto(-self.width / 4 - self.block_size*2, 0)
+        self.t.write('GAME OVER', font=('', 16, 'normal'))
         self.t.up()

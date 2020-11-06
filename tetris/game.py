@@ -1,10 +1,18 @@
 import time
 import math
 import random
+from enum import Enum
 from itertools import dropwhile
 from tetris import Position
 from tetris.shapes import Shape, OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock
 from tetris.utils import transpose
+
+
+class Collision(Enum):
+    LEFT_WALL = 1
+    RIGHT_WALL = 2
+    FLOOR = 3
+    BLOCK = 4
 
 
 class Tetris:
@@ -15,31 +23,30 @@ class Tetris:
     # 4 lines - 1200 points
     POINTS = [40, 100, 300, 1200]
 
-    def __init__(self, grid, shapes_list=None):
+    def __init__(self, grid, shapes_list=None, delay=1):
         self.grid = grid
         self.shapes_list = [OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock] \
             if shapes_list is None else shapes_list
-        self.delay = 1  # that's basically the speed of the game or what is the time between the piece is moved down
+        self.delay = delay  # that's basically the speed of the game or what is the time between the piece is moved down
         self.quit = False
         self.reset_game(clear_grid=False)
 
-    def run(self, delay=True):
-        if not self.pause:
-            if self.current_block is None:
-                self.load_next_blocks()
-            elif not self.move_down():
-                if self.current_block.position.row <= 0:
-                    self.game_over = True
-
-                self.clean_complete_rows()
-                self.current_block = None
-                self.load_next_blocks()
-        if delay:
-            time.sleep(self.delay)
-
-    def mainloop(self):
+    def mainloop(self, delay=True):
         while not self.quit:
-            self.run()
+            if not self.pause:
+                if self.current_block.can_move:
+                    self.move_down()
+                self.check_state()
+            if delay:
+                time.sleep(self.delay)
+
+    def check_state(self):
+        lines_cleared = 0
+        if not self.current_block.can_move:
+            lines_cleared = self.clean_complete_rows()
+            self.load_next_blocks()
+
+        return lines_cleared
 
     def play_pause(self):
         if not self.game_over:
@@ -51,8 +58,9 @@ class Tetris:
         if clear_grid:
             self.grid.clear()
 
-        self.current_block = None
-        self.next_block = None
+        self.current_block = self.create_block()
+        self.set_block()
+        self.next_block = self.create_block()
         self.pause = False
         self.game_over = False
 
@@ -84,8 +92,6 @@ class Tetris:
         # calculate it's position - top center of the grid
         col = math.floor(self.grid.cols / 2) - math.ceil(len(block.shape) / 2)
         block.set_pos(Position(0, col))
-        # randomly rotate the piece
-        block.rotate(random.randint(0, 3))
         return block
 
     def load_next_blocks(self):
@@ -93,6 +99,11 @@ class Tetris:
             self.next_block = self.create_block()
 
         self.current_block = self.next_block
+
+        if self.collides():
+            self.current_block.can_move = False
+            self.game_over = True
+
         self.set_block()
         self.next_block = self.create_block()
 
@@ -104,17 +115,19 @@ class Tetris:
         for row in range(self.current_block.rows):
             for col in range(self.current_block.cols):
                 if self.current_block.shape[row][col] != 0:
-                    if pos.col + col < 0 or pos.col + col > self.grid.last_col:
-                        return True
-                    if pos.row + row > self.grid.last_row:
-                        return True
-                    if self.grid[pos.row + row, pos.col + col] != 0:
-                        return True
+                    if pos.col + col < 0:
+                        return Collision.LEFT_WALL
+                    elif pos.col + col > self.grid.last_col:
+                        return Collision.RIGHT_WALL
+                    elif pos.row + row > self.grid.last_row:
+                        return Collision.FLOOR
+                    elif self.grid[pos.row + row, pos.col + col] != 0:
+                        return Collision.BLOCK
         return False
 
     def move_down(self):
-        if not self.current_block or self.pause:
-            return False
+        if not self.current_block or not self.current_block.can_move or self.pause:
+            return
 
         self.remove_block()
         self.current_block.move_down()
@@ -122,19 +135,18 @@ class Tetris:
         if self.collides():
             self.current_block.move_up()
             self.set_block()
-            return False
-
-        self.set_block()
-        self.score += 1
-        return True
+            self.current_block.can_move = False
+        else:
+            self.set_block()
+            self.score += 1
 
     def move_bottom(self):
-        while self.move_down():
-            pass
-        self.run(delay=False)
+        while self.current_block.can_move:
+            self.move_down()
+        return self.check_state()
 
     def move_left(self, times=1):
-        if not self.current_block or self.pause:
+        if not self.current_block or not self.current_block.can_move or self.pause:
             return
 
         self.remove_block()
@@ -144,7 +156,7 @@ class Tetris:
         self.set_block()
 
     def move_right(self, times=1):
-        if not self.current_block or self.pause:
+        if not self.current_block or not self.current_block.can_move or self.pause:
             return
 
         self.remove_block()
@@ -154,7 +166,7 @@ class Tetris:
         self.set_block()
 
     def rotate(self):
-        if not self.current_block or self.pause:
+        if not self.current_block or not self.current_block.can_move or self.pause:
             return
 
         self.remove_block()
@@ -163,14 +175,15 @@ class Tetris:
         # fix cases where block can't rotate if all the way to the left or right
 
         # if block is next to left wall move to the right and then rotate
-        if self.collides() and self.current_block.position.col <= 0:
+        collision = self.collides()
+        if collision == Collision.LEFT_WALL:
             for i in range(self.current_block.cols):
                 self.current_block.move_right()
                 if not self.collides():
                     break
 
         # if block is next to right wall move to the left and then rotate
-        if self.collides() and (self.current_block.position.col + self.current_block.cols) >= self.grid.last_col:
+        if collision == Collision.RIGHT_WALL:
             for i in range(self.current_block.cols):
                 self.current_block.move_left()
                 if not self.collides():
@@ -191,6 +204,7 @@ class Tetris:
         if lines_cleared > 0:
             self.total_lines += lines_cleared
             self.score += self.POINTS[lines_cleared] * (self.level + 1)
+        return lines_cleared
 
     def get_holes(self):
         holes = 0
@@ -202,7 +216,7 @@ class Tetris:
                     break
         return holes
 
-    def get_bumpines(self):
+    def get_bumpiness(self):
         total_bumpiness = 0
         max_bumpiness = 0
         t_grid = transpose(self.grid.grid)
@@ -220,7 +234,6 @@ class Tetris:
 
         return total_bumpiness, max_bumpiness
 
-
     def get_height(self):
         sum_height = 0
         for col in transpose(self.grid.grid):
@@ -229,6 +242,6 @@ class Tetris:
 
     def get_state(self):
         holes = self.get_holes()
-        total_bumpiness, max_bumpiness = self.get_bumpines()
+        total_bumpiness, max_bumpiness = self.get_bumpiness()
         line_height = self.get_height()
-        return [self.total_lines, holes, total_bumpiness, line_height]
+        return [self.current_block.color.value, self.grid.grid, self.total_lines, holes, total_bumpiness, line_height]

@@ -19,6 +19,7 @@ class Shape:
         self.color = color
         self.shape = shape
         self.set_shape_color()
+        self.can_move = True
 
     @property
     def rows(self):
