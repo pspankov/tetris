@@ -1,11 +1,20 @@
 import turtle
-from tetris import Position, Grid, Colors
+from tetris import Position, Grid
 from tetris.game import Tetris
+
+
+COLORS = ['#FFFFFF',  # background
+          '#FFD500',  # Yellow O-block
+          '#66A3ED',  # Lightblue I-block
+          '#6B3ACF',  # Purple T-block
+          '#0341AE',  # Blue J-block
+          '#FF971C',  # Orange L-block
+          '#FF3213',  # Red Z-block
+          '#72CB3B']  # Green S-block
 
 
 class Screen:
     STAMP_SIZE = 20
-    BACKGROUND_COLOR = 'white'
     TEXT_COLOR = 'black'
     MIN_SCREEN_WIDTH = 420
     MIN_SCREEN_HEIGHT = 480
@@ -32,7 +41,7 @@ class Screen:
     def init_screen(self):
         s = turtle.Screen()
         s.title('TETR1S by Pavel')
-        s.bgcolor(self.BACKGROUND_COLOR)
+        s.bgcolor(COLORS[0])
         s.setup(width=self.width, height=self.height)
         s.tracer(0)
 
@@ -54,10 +63,11 @@ class Screen:
         self.draw_info()
 
         while not self._quit:
+
             if self.tetris.game_over:
                 self.draw_game_over()
             else:
-                # self.s.update()
+                self.t.clear()
                 self.draw_grid()
                 self.draw_next_block()
                 self.draw_score()
@@ -84,7 +94,6 @@ class Screen:
         self._quit = True
 
     def draw_grid(self):
-        self.t.clear()
         row = self.height / 2 - self.block_size - self.block_size / 2
         col = -self.width / 2 + self.block_size + self.block_size / 2
         top_left = Position(row, col)
@@ -93,10 +102,7 @@ class Screen:
             for col in range(self.grid.cols):
                 screen_x = top_left.col + (col * self.block_size)
                 screen_y = top_left.row - (row * self.block_size)
-                if self.grid[row, col] != Colors.BACKGROUND.value:
-                    self.t.color(Colors(self.grid[row, col]).name)
-                else:
-                    self.t.color(self.BACKGROUND_COLOR)
+                self.t.color(COLORS[self.grid[row, col]])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 
@@ -145,10 +151,7 @@ class Screen:
             for col in range(self.tetris.next_block.cols):
                 screen_x = top_left.col + (col * self.block_size)
                 screen_y = top_left.row - (row * self.block_size)
-                if self.tetris.next_block.shape[row][col] != Colors.BACKGROUND.value:
-                    self.t.color(Colors(self.tetris.next_block.shape[row][col]).name)
-                else:
-                    self.t.color(self.BACKGROUND_COLOR)
+                self.t.color(COLORS[self.tetris.next_block.shape[row][col]])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 

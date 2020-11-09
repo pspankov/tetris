@@ -2,10 +2,10 @@ import time
 import math
 import random
 from enum import Enum
+from copy import copy
 from itertools import dropwhile
-from tetris import Position
-from tetris.shapes import Shape, OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock
-from tetris.utils import transpose
+from tetris import Position, transpose
+from tetris.shapes import Shape
 
 
 class Collision(Enum):
@@ -25,8 +25,33 @@ class Tetris:
 
     def __init__(self, grid, shapes_list=None, delay=1):
         self.grid = grid
-        self.shapes_list = [OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock] \
-            if shapes_list is None else shapes_list
+        if shapes_list is None:
+            self.shapes_list = []
+            self.shapes_list.append(Shape(id=1, shape=[[1, 1],
+                                                       [1, 1]]))
+            self.shapes_list.append(Shape(id=2, shape=[[0, 0, 0, 0],
+                                                       [2, 2, 2, 2],
+                                                       [0, 0, 0, 0],
+                                                       [0, 0, 0, 0]]))
+            self.shapes_list.append(Shape(id=3, shape=[[0, 3, 0],
+                                                       [3, 3, 3],
+                                                       [0, 0, 0]]))
+            self.shapes_list.append(Shape(id=4, shape=[[4, 0, 0],
+                                                       [4, 4, 4],
+                                                       [0, 0, 0]]))
+            self.shapes_list.append(Shape(id=5, shape=[[0, 0, 5],
+                                                       [5, 5, 5],
+                                                       [0, 0, 0]]))
+            self.shapes_list.append(Shape(id=6, shape=[[6, 6, 0],
+                                                       [0, 6, 6],
+                                                       [0, 0, 0]]))
+            self.shapes_list.append(Shape(id=7, shape=[[0, 7, 7],
+                                                       [7, 7, 0],
+                                                       [0, 0, 0]]))
+        else:
+            self.shapes_list = shapes_list
+        # self.shapes_list = [OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock] \
+        #     if shapes_list is None else shapes_list
         self.delay = delay  # that's basically the speed of the game or what is the time between the piece is moved down
         self.quit = False
         self.reset_game(clear_grid=False)
@@ -40,6 +65,32 @@ class Tetris:
             if delay:
                 time.sleep(self.delay)
 
+    def create_block(self) -> Shape:
+        # get random shape from all possible shapes
+        block = copy(self.shapes_list[random.randint(0, len(self.shapes_list) - 1)])
+        # calculate it's position - top center of the grid
+        col = math.floor(self.grid.cols / 2) - math.ceil(len(block.shape) / 2)
+        block.set_pos(Position(0, col))
+        return block
+
+    def set_block(self):
+        # set the current block on the grid
+        pos = self.current_block.position
+        for row in range(self.current_block.rows):
+            for col in range(self.current_block.cols):
+                if self.current_block.shape[row][col] != 0:
+                    self.grid[pos.row + row, pos.col + col] = self.current_block.shape[row][col]
+
+    def remove_block(self):
+        # remove the current block from the grid
+        if not self.current_block:
+            return
+        pos = self.current_block.position
+        for row in range(self.current_block.rows):
+            for col in range(self.current_block.cols):
+                if self.current_block.shape[row][col] != 0:
+                    self.grid[pos.row + row, pos.col + col] = 0
+
     def check_state(self):
         lines_cleared = 0
         if not self.current_block.can_move:
@@ -47,6 +98,51 @@ class Tetris:
             self.load_next_blocks()
 
         return lines_cleared
+
+    def collides(self):
+        # set the future position of the block
+        # and check if there is already a piece on the grid there
+        # along with that check if the block is not off the limits of the grid
+        pos = self.current_block.position
+        for row in range(self.current_block.rows):
+            for col in range(self.current_block.cols):
+                if self.current_block.shape[row][col] != 0:
+                    if pos.col + col < 0:
+                        return Collision.LEFT_WALL
+                    elif pos.col + col > self.grid.last_col:
+                        return Collision.RIGHT_WALL
+                    elif pos.row + row > self.grid.last_row:
+                        return Collision.FLOOR
+                    elif self.grid[pos.row + row, pos.col + col] != 0:
+                        return Collision.BLOCK
+        return False
+
+    def clean_complete_rows(self):
+        # when row columns are filled we need the clear them out (the rules of the game :))
+        lines_cleared = 0
+        for row in range(self.grid.rows):
+            if 0 not in self.grid[row]:
+                lines_cleared += 1
+                self.grid.delete_row(row)
+        if lines_cleared > 0:
+            self.total_lines += lines_cleared
+            self.score += self.POINTS[lines_cleared] * (self.level + 1)
+        return lines_cleared
+
+    def load_next_blocks(self):
+        if self.next_block is None:
+            self.next_block = self.create_block()
+
+        self.current_block = self.next_block
+
+        if self.collides():
+            self.current_block.can_move = False
+            self.game_over = True
+
+        self.set_block()
+        self.next_block = self.create_block()
+
+    """ Game options """
 
     def play_pause(self):
         if not self.game_over:
@@ -68,62 +164,7 @@ class Tetris:
         self.level = 0
         self.total_lines = 0
 
-    def set_block(self):
-        # set the current block on the grid
-        pos = self.current_block.position
-        for row in range(self.current_block.rows):
-            for col in range(self.current_block.cols):
-                if self.current_block.shape[row][col] != 0:
-                    self.grid[pos.row + row, pos.col + col] = self.current_block.shape[row][col]
-
-    def remove_block(self):
-        # remove the current block from the grid
-        if not self.current_block:
-            return
-        pos = self.current_block.position
-        for row in range(self.current_block.rows):
-            for col in range(self.current_block.cols):
-                if self.current_block.shape[row][col] != 0:
-                    self.grid[pos.row + row, pos.col + col] = 0
-
-    def create_block(self) -> Shape:
-        # get random shape from all possible shapes
-        block = self.shapes_list[random.randint(0, len(self.shapes_list) - 1)]()
-        # calculate it's position - top center of the grid
-        col = math.floor(self.grid.cols / 2) - math.ceil(len(block.shape) / 2)
-        block.set_pos(Position(0, col))
-        return block
-
-    def load_next_blocks(self):
-        if self.next_block is None:
-            self.next_block = self.create_block()
-
-        self.current_block = self.next_block
-
-        if self.collides():
-            self.current_block.can_move = False
-            self.game_over = True
-
-        self.set_block()
-        self.next_block = self.create_block()
-
-    def collides(self):
-        # set the future position of the block
-        # and check if there is already a piece on the grid there
-        # along with that check if the block is not off the limits of the grid
-        pos = self.current_block.position
-        for row in range(self.current_block.rows):
-            for col in range(self.current_block.cols):
-                if self.current_block.shape[row][col] != 0:
-                    if pos.col + col < 0:
-                        return Collision.LEFT_WALL
-                    elif pos.col + col > self.grid.last_col:
-                        return Collision.RIGHT_WALL
-                    elif pos.row + row > self.grid.last_row:
-                        return Collision.FLOOR
-                    elif self.grid[pos.row + row, pos.col + col] != 0:
-                        return Collision.BLOCK
-        return False
+    """ Game movements """
 
     def move_down(self):
         if not self.current_block or not self.current_block.can_move or self.pause:
@@ -194,17 +235,7 @@ class Tetris:
             self.current_block.rotate(3)
         self.set_block()
 
-    def clean_complete_rows(self):
-        # when row columns are filled we need the clear them out (the rules of the game :))
-        lines_cleared = 0
-        for row in range(self.grid.rows):
-            if 0 not in self.grid[row]:
-                lines_cleared += 1
-                self.grid.delete_row(row)
-        if lines_cleared > 0:
-            self.total_lines += lines_cleared
-            self.score += self.POINTS[lines_cleared] * (self.level + 1)
-        return lines_cleared
+    """ Game statistics """
 
     def get_holes(self):
         holes = 0
@@ -240,8 +271,8 @@ class Tetris:
             sum_height += len(list(dropwhile(lambda x: x == 0, col)))
         return sum_height
 
-    def get_state(self):
+    def get_info(self):
         holes = self.get_holes()
         total_bumpiness, max_bumpiness = self.get_bumpiness()
         line_height = self.get_height()
-        return [self.current_block.color.value, self.grid.grid, self.total_lines, holes, total_bumpiness, line_height]
+        return [self.total_lines, holes, total_bumpiness, line_height]

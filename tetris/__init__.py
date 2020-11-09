@@ -1,17 +1,8 @@
-__version__ = 1.0
-
-from enum import Enum
+__version__ = 1.1
 
 
-class Colors(Enum):
-    BACKGROUND = 0
-    LIGHTBLUE = 1
-    BLUE = 2
-    ORANGE = 3
-    YELLOW = 4
-    GREEN = 5
-    PURPLE = 6
-    RED = 7
+def transpose(matrix):
+    return list(zip(*matrix))
 
 
 class Position:
