@@ -1,5 +1,4 @@
-from tetris import Position
-from tetris import transpose
+from tetris import Position, transpose
 
 
 class Shape:

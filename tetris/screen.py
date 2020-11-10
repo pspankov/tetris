@@ -63,23 +63,21 @@ class Screen:
         self.draw_info()
 
         while not self._quit:
-
+            self.t.clear()
+            self.draw_grid()
+            self.draw_next_block()
+            self.draw_score()
             if self.tetris.game_over:
                 self.draw_game_over()
-            else:
-                self.t.clear()
-                self.draw_grid()
-                self.draw_next_block()
-                self.draw_score()
 
         self.s.bye()
 
     def create_pen(self):
         t = turtle.Turtle()
+        t.speed(0)
         t.hideturtle()
         t.up()
-        t.speed(0)
-        t.setundobuffer(1)
+        t.setundobuffer(0)
         return t
 
     def create_square_pen(self):
@@ -87,6 +85,7 @@ class Screen:
         t.shape('square')
         t.resizemode('user')
         t.shapesize(self.block_size / self.STAMP_SIZE)
+        t.setundobuffer(0)
         return t
 
     def quit(self):
@@ -110,7 +109,7 @@ class Screen:
         self.t.color(self.TEXT_COLOR)
         self.t.goto(self.block_size, self.block_size * 4)
         self.t.write(f'Score: {self.tetris.score} \nLines: {self.tetris.total_lines}',
-                     font=('', 18, 'normal'))
+                     font=('', 18, 'normal'), move=False)
 
     def draw_border(self):
         top_left = Position(self.height / 2 - self.block_size + 1, -self.width / 2 + self.block_size - 1)
@@ -159,4 +158,3 @@ class Screen:
         self.t.color(self.TEXT_COLOR)
         self.t.goto(-self.width / 4 - self.block_size*2, 0)
         self.t.write('GAME OVER', font=('', 16, 'normal'))
-        self.t.up()

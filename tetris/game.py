@@ -3,8 +3,7 @@ import math
 import random
 from enum import Enum
 from copy import copy
-from itertools import dropwhile
-from tetris import Position, transpose
+from tetris import Position
 from tetris.shapes import Shape
 
 
@@ -27,38 +26,43 @@ class Tetris:
         self.grid = grid
         if shapes_list is None:
             self.shapes_list = []
+            # O-block
             self.shapes_list.append(Shape(id=1, shape=[[1, 1],
                                                        [1, 1]]))
+            # I-block
             self.shapes_list.append(Shape(id=2, shape=[[0, 0, 0, 0],
                                                        [2, 2, 2, 2],
                                                        [0, 0, 0, 0],
                                                        [0, 0, 0, 0]]))
+            # T-block
             self.shapes_list.append(Shape(id=3, shape=[[0, 3, 0],
                                                        [3, 3, 3],
                                                        [0, 0, 0]]))
+            # J-block
             self.shapes_list.append(Shape(id=4, shape=[[4, 0, 0],
                                                        [4, 4, 4],
                                                        [0, 0, 0]]))
+            # L-block
             self.shapes_list.append(Shape(id=5, shape=[[0, 0, 5],
                                                        [5, 5, 5],
                                                        [0, 0, 0]]))
+            # Z-block
             self.shapes_list.append(Shape(id=6, shape=[[6, 6, 0],
                                                        [0, 6, 6],
                                                        [0, 0, 0]]))
+            # S-block
             self.shapes_list.append(Shape(id=7, shape=[[0, 7, 7],
                                                        [7, 7, 0],
                                                        [0, 0, 0]]))
         else:
             self.shapes_list = shapes_list
-        # self.shapes_list = [OBlock, IBlock, LBlock, JBlock, SBlock, ZBlock, TBlock] \
-        #     if shapes_list is None else shapes_list
-        self.delay = delay  # that's basically the speed of the game or what is the time between the piece is moved down
+        self.delay = delay  # the speed of the game (the delay the piece is moved down on it's own)
         self.quit = False
         self.reset_game(clear_grid=False)
 
     def mainloop(self, delay=True):
         while not self.quit:
-            if not self.pause:
+            if not self.pause and not self.game_over:
                 if self.current_block.can_move:
                     self.move_down()
                 self.check_state()
@@ -168,7 +172,7 @@ class Tetris:
 
     def move_down(self):
         if not self.current_block or not self.current_block.can_move or self.pause:
-            return
+            return False
 
         self.remove_block()
         self.current_block.move_down()
@@ -177,9 +181,11 @@ class Tetris:
             self.current_block.move_up()
             self.set_block()
             self.current_block.can_move = False
+            return False
         else:
             self.set_block()
             self.score += 1
+            return True
 
     def move_bottom(self):
         while self.current_block.can_move:
@@ -188,27 +194,33 @@ class Tetris:
 
     def move_left(self, times=1):
         if not self.current_block or not self.current_block.can_move or self.pause:
-            return
+            return False
 
         self.remove_block()
         self.current_block.move_left(times)
         if self.collides():
             self.current_block.move_right(times)
+            self.set_block()
+            return False
         self.set_block()
+        return True
 
     def move_right(self, times=1):
         if not self.current_block or not self.current_block.can_move or self.pause:
-            return
+            return False
 
         self.remove_block()
         self.current_block.move_right(times)
         if self.collides():
             self.current_block.move_left(times)
+            self.set_block()
+            return False
         self.set_block()
+        return True
 
     def rotate(self):
         if not self.current_block or not self.current_block.can_move or self.pause:
-            return
+            return False
 
         self.remove_block()
         self.current_block.rotate()
@@ -233,46 +245,8 @@ class Tetris:
         if self.collides():
             # rotating 3 times returns it to it's original position
             self.current_block.rotate(3)
+            self.set_block()
+            return False
+
         self.set_block()
-
-    """ Game statistics """
-
-    def get_holes(self):
-        holes = 0
-
-        for row in transpose(self.grid.grid):
-            for idx, el in enumerate(row):
-                if el != 0:
-                    holes += row[idx + 1:].count(0)
-                    break
-        return holes
-
-    def get_bumpiness(self):
-        total_bumpiness = 0
-        max_bumpiness = 0
-        t_grid = transpose(self.grid.grid)
-        cols_ids = []
-        for col in t_grid:
-            cols_ids.append(next((i for i, x in enumerate(col) if x), self.grid.rows))
-
-        for i, idx in enumerate(cols_ids):
-            try:
-                bumpiness = abs(idx - cols_ids[i + 1])
-                max_bumpiness = max(bumpiness, max_bumpiness)
-                total_bumpiness += bumpiness
-            except (TypeError, IndexError) as e:
-                pass
-
-        return total_bumpiness, max_bumpiness
-
-    def get_height(self):
-        sum_height = 0
-        for col in transpose(self.grid.grid):
-            sum_height += len(list(dropwhile(lambda x: x == 0, col)))
-        return sum_height
-
-    def get_info(self):
-        holes = self.get_holes()
-        total_bumpiness, max_bumpiness = self.get_bumpiness()
-        line_height = self.get_height()
-        return [self.total_lines, holes, total_bumpiness, line_height]
+        return True

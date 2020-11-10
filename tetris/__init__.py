@@ -24,6 +24,7 @@ class Grid:
         self.last_row = self.rows - 1
         self.last_col = self.cols - 1
         self.grid = self.create()
+        self.i = 0
 
     def delete_row(self, row):
         del self.grid[row]
@@ -56,6 +57,11 @@ class Grid:
         self.grid[row][col] = value
 
     def __iter__(self):
-        for row in range(self.rows):
-            for col in range(self.cols):
-                yield self.grid[row][col]
+        return iter(self.grid)
+
+    def __next__(self):
+        i = self.i
+        self.i += 1
+        if i <= self.last_row:
+            return i
+        raise StopIteration
