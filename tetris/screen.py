@@ -108,7 +108,7 @@ class Screen:
     def draw_score(self):
         self.t.color(self.TEXT_COLOR)
         self.t.goto(self.block_size, self.block_size * 4)
-        self.t.write(f'Score: {self.tetris.score} \nLines: {self.tetris.total_lines}',
+        self.t.write(f'Score: {self.tetris.score} \nLines: {self.tetris.lines}',
                      font=('', 18, 'normal'), move=False)
 
     def draw_border(self):

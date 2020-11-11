@@ -35,3 +35,9 @@ class Shape:
             self.shape = transpose(self.shape)
             for i in range(len(self.shape)):
                 self.shape[i] = list(self.shape[i])[::-1]
+
+    def __str__(self):
+        return str(self.id)
+
+    def __repr__(self):
+        return str(self.id)
