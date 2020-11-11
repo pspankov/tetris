@@ -77,7 +77,6 @@ class Tetris:
     def get_random_bag(self):
         bag = deepcopy(self.shapes_list)
         random.shuffle(bag)
-        print(bag)
         return bag
 
     def create_block(self):
@@ -101,7 +100,7 @@ class Tetris:
         while not self.quit:
             if not self.pause and not self.game_over:
                 if self.block.can_move:
-                    self.move_down()
+                    self.move_down(score=False)
                 self.check_state()
             if delay:
                 time.sleep(self.delay)
@@ -188,10 +187,11 @@ class Tetris:
         self.block = None
         self.next_block = None
         self.create_block()
+        self.set_block()
 
     """ Game movements """
 
-    def move_down(self):
+    def move_down(self, score=True):
         if not self.block or not self.block.can_move or self.pause:
             return False
 
@@ -205,10 +205,12 @@ class Tetris:
             return False
         else:
             self.set_block()
-            self.score += 1
+            if score:
+                self.score += 1
             return True
 
-    def move_bottom(self):
+    def drop(self):
+        """ Drop block all way down """
         while self.block.can_move:
             self.move_down()
         return self.check_state()

@@ -51,7 +51,7 @@ class Screen:
         s.onkeypress(self.tetris.move_right, 'd')
         s.onkeypress(self.tetris.rotate, 'w')
         s.onkeypress(self.tetris.move_down, 's')
-        s.onkeypress(self.tetris.move_bottom, 'space')
+        s.onkeypress(self.tetris.drop, 'space')
         s.onkeypress(self.quit, 'q')
         s.listen()
 
