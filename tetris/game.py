@@ -209,11 +209,12 @@ class Tetris:
                 self.score += 1
             return True
 
-    def drop(self):
+    def drop(self, check_state=True):
         """ Drop block all way down """
         while self.block.can_move:
             self.move_down()
-        return self.check_state()
+        if check_state:
+            return self.check_state()
 
     def move_left(self, times=1):
         if not self.block or not self.block.can_move or self.pause:
