@@ -1,5 +1,5 @@
 import turtle
-from tetris import Grid
+from tetris.grid import Grid
 from tetris.game import Tetris
 
 
@@ -115,9 +115,9 @@ class Screen:
 
     def draw_score(self):
         self.t.color(self.TEXT_COLOR)
-        self.t.goto(self.block_size, self.block_size * 4)
-        self.t.write(f'Score: {self.tetris.score} \nLines: {self.tetris.lines}',
-                     font=('', 18, 'normal'), move=False)
+        self.t.goto(self.block_size, self.block_size * 3)
+        info = f'Score: {self.tetris.score} \nLines: {self.tetris.lines}\nLevel: {self.tetris.level}'
+        self.t.write(info, font=('', 18, 'normal'), move=False)
 
     def draw_border(self):
         x = -self.width / 2 + self.block_size - 1
@@ -151,17 +151,17 @@ class Screen:
         self.static_pen.up()
 
     def draw_next_block(self):
-        if not self.tetris.next_block:
+        if not self.grid.next_block:
             return
 
         x = self.block_size * 2
         y = self.height / 2 - self.block_size * 2
 
-        for row in range(self.tetris.next_block.height):
-            for col in range(self.tetris.next_block.width):
+        for row in range(self.grid.next_block.height):
+            for col in range(self.grid.next_block.width):
                 screen_x = x + (col * self.block_size)
                 screen_y = y - (row * self.block_size)
-                self.t.color(COLORS[self.tetris.next_block.shape[row][col]])
+                self.t.color(COLORS[self.grid.next_block.shape[row][col]])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 

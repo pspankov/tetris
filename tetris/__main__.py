@@ -1,12 +1,12 @@
 import threading
 
-from tetris import Grid
+from tetris.grid import Grid, Bag
 from tetris.screen import Screen
 from tetris.game import Tetris
 
 
 def main():
-    grid = Grid(20, 10)
+    grid = Grid(20, 10, Bag())
     # mini_shapes = [shapes.MiniBlock, shapes.MiniOne, shapes.MiniTwo, shapes.MiniDiagTwo, shapes.MiniThree]
     tetris = Tetris(grid)
     screen = Screen(grid, tetris)
