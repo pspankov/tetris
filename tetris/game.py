@@ -3,7 +3,6 @@ import math
 import random
 from enum import Enum
 from copy import deepcopy
-from tetris import Position
 from tetris.shapes import Shape
 
 
@@ -91,7 +90,7 @@ class Tetris:
 
         # calculate it's position - top center of the grid
         col = math.floor(self.grid.cols / 2) - math.ceil(len(self.block.shape) / 2)
-        self.block.set_pos(Position(0, col))
+        self.block.col = col
         self.next_block = self.bag.pop()
 
         return self.block
@@ -107,21 +106,20 @@ class Tetris:
 
     def set_block(self):
         # set the current block on the grid
-        pos = self.block.position
-        for row in range(self.block.rows):
-            for col in range(self.block.cols):
+        for row in range(self.block.height):
+            for col in range(self.block.width):
                 if self.block.shape[row][col] != 0:
-                    self.grid[pos.row + row, pos.col + col] = self.block.shape[row][col]
+                    self.grid[self.block.row + row, self.block.col + col] = self.block.shape[row][col]
 
     def remove_block(self):
         # remove the current block from the grid
         if not self.block:
             return
-        pos = self.block.position
-        for row in range(self.block.rows):
-            for col in range(self.block.cols):
+
+        for row in range(self.block.height):
+            for col in range(self.block.width):
                 if self.block.shape[row][col] != 0:
-                    self.grid[pos.row + row, pos.col + col] = 0
+                    self.grid[self.block.row + row, self.block.col + col] = 0
 
     def check_state(self):
         lines_cleared = 0
@@ -140,17 +138,16 @@ class Tetris:
         # set the future position of the block
         # and check if there is already a piece on the grid there
         # along with that check if the block is not off the limits of the grid
-        pos = self.block.position
-        for row in range(self.block.rows):
-            for col in range(self.block.cols):
+        for row in range(self.block.height):
+            for col in range(self.block.width):
                 if self.block.shape[row][col] != 0:
-                    if pos.col + col < 0:
+                    if self.block.col + col < 0:
                         return Collision.LEFT_WALL
-                    elif pos.col + col > self.grid.last_col:
+                    elif self.block.col + col > self.grid.last_col:
                         return Collision.RIGHT_WALL
-                    elif pos.row + row > self.grid.last_row:
+                    elif self.block.row + row > self.grid.last_row:
                         return Collision.FLOOR
-                    elif self.grid[pos.row + row, pos.col + col] != 0:
+                    elif self.grid[self.block.row + row, self.block.col + col] != 0:
                         return Collision.BLOCK
         return False
 

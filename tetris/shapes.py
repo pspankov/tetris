@@ -1,4 +1,4 @@
-from tetris import Position, transpose
+from tetris import transpose
 
 
 class Shape:
@@ -6,29 +6,28 @@ class Shape:
         self.id = id
         self.shape = shape
         self.can_move = True
+        self.row = 0
+        self.col = 0
 
     @property
-    def rows(self):
+    def height(self):
         return len(self.shape)
 
     @property
-    def cols(self):
+    def width(self):
         return len(self.shape[0])
 
-    def set_pos(self, pos: Position):
-        self.position = pos
-
     def move_left(self, times=1):
-        self.position.col -= times
+        self.col -= times
 
     def move_right(self, times=1):
-        self.position.col += times
+        self.col += times
 
     def move_up(self):
-        self.position.row -= 1
+        self.row -= 1
 
     def move_down(self):
-        self.position.row += 1
+        self.row += 1
 
     def rotate(self, times=1):
         for time in range(times):

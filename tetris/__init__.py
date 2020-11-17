@@ -5,18 +5,6 @@ def transpose(matrix):
     return list(zip(*matrix))
 
 
-class Position:
-    def __init__(self, row, col):
-        self.row = int(row)
-        self.col = int(col)
-
-    def __str__(self):
-        return f'({self.row}, {self.col})'
-
-    def __repr__(self):
-        return f'({self.row}, {self.col})'
-
-
 class Grid:
     def __init__(self, rows, cols):
         self.rows = rows

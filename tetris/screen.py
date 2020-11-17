@@ -1,5 +1,5 @@
 import turtle
-from tetris import Position, Grid
+from tetris import Grid
 from tetris.game import Tetris
 
 
@@ -102,14 +102,13 @@ class Screen:
         self._quit = True
 
     def draw_grid(self):
-        row = self.height / 2 - self.block_size - self.block_size / 2
-        col = -self.width / 2 + self.block_size + self.block_size / 2
-        top_left = Position(row, col)
+        x = -self.width / 2 + self.block_size + self.block_size / 2
+        y = self.height / 2 - self.block_size - self.block_size / 2
 
         for row in range(self.grid.rows):
             for col in range(self.grid.cols):
-                screen_x = top_left.col + (col * self.block_size)
-                screen_y = top_left.row - (row * self.block_size)
+                screen_x = x + (col * self.block_size)
+                screen_y = y - (row * self.block_size)
                 self.t.color(COLORS[self.grid[row, col]])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
@@ -121,9 +120,11 @@ class Screen:
                      font=('', 18, 'normal'), move=False)
 
     def draw_border(self):
-        top_left = Position(self.height / 2 - self.block_size + 1, -self.width / 2 + self.block_size - 1)
+        x = -self.width / 2 + self.block_size - 1
+        y = self.height / 2 - self.block_size + 1
+
         self.static_pen.color('gray')
-        self.static_pen.goto(top_left.col, top_left.row)
+        self.static_pen.goto(x, y)
         self.static_pen.down()
         self.static_pen.fd(self.grid_width + 2)
         self.static_pen.right(90)
@@ -153,12 +154,13 @@ class Screen:
         if not self.tetris.next_block:
             return
 
-        top_left = Position(self.height / 2 - self.block_size * 2, self.block_size * 2)
+        x = self.block_size * 2
+        y = self.height / 2 - self.block_size * 2
 
-        for row in range(self.tetris.next_block.rows):
-            for col in range(self.tetris.next_block.cols):
-                screen_x = top_left.col + (col * self.block_size)
-                screen_y = top_left.row - (row * self.block_size)
+        for row in range(self.tetris.next_block.height):
+            for col in range(self.tetris.next_block.width):
+                screen_x = x + (col * self.block_size)
+                screen_y = y - (row * self.block_size)
                 self.t.color(COLORS[self.tetris.next_block.shape[row][col]])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
