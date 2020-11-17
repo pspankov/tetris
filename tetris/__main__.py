@@ -6,16 +6,16 @@ from tetris.game import Tetris
 
 
 def main():
-    grid = Grid(22, 10)
+    grid = Grid(20, 10)
     # mini_shapes = [shapes.MiniBlock, shapes.MiniOne, shapes.MiniTwo, shapes.MiniDiagTwo, shapes.MiniThree]
     tetris = Tetris(grid)
     screen = Screen(grid, tetris)
 
-    x = threading.Thread(target=tetris.mainloop, name=Tetris)
+    x = threading.Thread(target=tetris.mainloop, name='Tetris')
     x.start()
 
     screen.mainloop()
-    x.join()
+    x.join(timeout=0)
     print('Bye!')
 
 

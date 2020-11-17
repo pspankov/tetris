@@ -17,7 +17,7 @@ class Screen:
     STAMP_SIZE = 20
     TEXT_COLOR = 'black'
     MIN_SCREEN_WIDTH = 420
-    MIN_SCREEN_HEIGHT = 480
+    MIN_SCREEN_HEIGHT = 420
 
     def __init__(self, grid: Grid, tetris: Tetris, block_size=20):
         self.grid = grid
@@ -38,6 +38,9 @@ class Screen:
         self.score_pen = self.create_pen()
         self.static_pen = self.create_pen()
 
+        self.draw_border()
+        self.draw_info()
+
     def init_screen(self):
         s = turtle.Screen()
         s.title('TETR1S by Pavel')
@@ -57,20 +60,26 @@ class Screen:
 
         return s
 
+    def draw(self):
+        self.s.update()
+
+        # while not self._quit:
+        self.t.clear()
+        self.draw_grid()
+        self.draw_next_block()
+        self.draw_score()
+
+        if self.tetris.game_over:
+            self.draw_game_over()
+
+        if self._quit:
+            self.s.bye()
+
+        self.s.ontimer(self.draw)
+
     def mainloop(self):
-        self.static_pen.clear()
-        self.draw_border()
-        self.draw_info()
-
-        while not self._quit:
-            self.t.clear()
-            self.draw_grid()
-            self.draw_next_block()
-            self.draw_score()
-            if self.tetris.game_over:
-                self.draw_game_over()
-
-        self.s.bye()
+        self.draw()
+        self.s.mainloop()
 
     def create_pen(self):
         t = turtle.Turtle()
@@ -127,7 +136,7 @@ class Screen:
 
     def draw_info(self):
         self.static_pen.color(self.TEXT_COLOR)
-        self.static_pen.goto(0 + self.block_size, -self.height / 2 + 20)
+        self.static_pen.goto(0 + self.block_size, -self.height / 3)
         info = 'Key commands: \r\n' \
                '<P> play/pause \n' \
                '<R> reset game \n' \
