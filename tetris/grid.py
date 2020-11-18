@@ -112,11 +112,10 @@ class Grid:
 
     def reset(self):
         self.grid = self.create()
-        self.bag = None
+        self.tetriminos = None
         self.block = None
         self.next_block = None
         self.create_block()
-        self.set_block()
 
     def create_block(self):
         if not self.tetriminos:
@@ -128,9 +127,10 @@ class Grid:
             self.block = self.next_block
 
         # calculate it's position - top center of the grid
-        col = math.floor(self.cols / 2) - math.ceil(len(self.block.shape) / 2)
+        col = math.floor(self.cols / 2) - math.ceil(self.block.width / 2)
         self.block.col = col
         self.next_block = self.tetriminos.pop()
+        self.set_block()
 
         return self.block
 
@@ -180,7 +180,7 @@ class Grid:
         if self.collides():
             self.block.move(-col, -row)
             self.set_block()
-            if col == 0:
+            if col == 0:  # if it's moved down
                 self.block.can_move = False
             return False
         else:

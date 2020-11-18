@@ -99,29 +99,31 @@ class Tetris:
                 if self.lines >= lines_to_level_up:
                     self.level += 1
 
-            self.grid.create_block()
-            # if collides immediately after creation - we reached the top - it's game over
-            if self.grid.collides():
+            if self.grid.block.row <= 0:
                 self.game_over = True
-            else:
-                self.grid.set_block()
+
+            self.grid.create_block()
 
         return lines_cleared
 
     def move_left(self):
-        self.grid.move(-1, 0)
+        if not self.game_over and not self.pause:
+            self.grid.move(-1, 0)
 
     def move_right(self):
-        self.grid.move(1, 0)
+        if not self.game_over and not self.pause:
+            self.grid.move(1, 0)
 
     def move_down(self):
-        moved = self.grid.move(0, 1)
-        if moved:
-            self.score += 1
-        return moved
+        if not self.game_over and not self.pause:
+            moved = self.grid.move(0, 1)
+            if moved:
+                self.score += 1
+            return moved
 
     def rotate(self):
-        self.grid.rotate()
+        if not self.game_over and not self.pause:
+            self.grid.rotate()
 
     def drop(self, check_state=True):
         """ Drop block all way down """
