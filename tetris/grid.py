@@ -36,7 +36,7 @@ class Tetrimino:
     def rotate(self, times=1):
         for time in range(times):
             self.shape = transpose(self.shape)
-            for i in range(len(self.shape)):
+            for i in range(self.width):
                 self.shape[i] = list(self.shape[i])[::-1]
 
     def __str__(self):

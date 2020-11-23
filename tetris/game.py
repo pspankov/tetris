@@ -101,18 +101,18 @@ class Tetris:
 
             if self.grid.block.row <= 0:
                 self.game_over = True
-
-            self.grid.create_block()
+            else:
+                self.grid.create_block()
 
         return lines_cleared
 
     def move_left(self):
         if not self.game_over and not self.pause:
-            self.grid.move(-1, 0)
+            return self.grid.move(-1, 0)
 
     def move_right(self):
         if not self.game_over and not self.pause:
-            self.grid.move(1, 0)
+            return self.grid.move(1, 0)
 
     def move_down(self):
         if not self.game_over and not self.pause:

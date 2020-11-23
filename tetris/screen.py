@@ -155,7 +155,7 @@ class Screen:
             return
 
         x = self.block_size * 2
-        y = self.height / 2 - self.block_size * 2
+        y = int(self.height / 2 - self.block_size * 2)
 
         for row in range(self.grid.next_block.height):
             for col in range(self.grid.next_block.width):
