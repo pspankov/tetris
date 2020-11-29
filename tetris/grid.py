@@ -14,20 +14,15 @@ class Collision(Enum):
 
 
 class Tetrimino:
-    def __init__(self, id, shape):
+    def __init__(self, id, name, shape):
         self.id = id
+        self.name = name
         self.shape = shape
+        self.height = len(self.shape)
+        self.width = len(self.shape[0])
         self.can_move = True
-        self.row = 0
         self.col = 0
-
-    @property
-    def height(self):
-        return len(self.shape)
-
-    @property
-    def width(self):
-        return len(self.shape[0])
+        self.row = 0
 
     def move(self, col, row):
         self.col += col
@@ -40,50 +35,42 @@ class Tetrimino:
                 self.shape[i] = list(self.shape[i])[::-1]
 
     def __str__(self):
-        return str(self.id)
+        return f'({self.col}, {self.row}) {self.name}'
 
     def __repr__(self):
-        return str(self.id)
+        return f'({self.col}, {self.row}) {self.name}'
 
 
 class Bag:
-    def __init__(self, tetriminos=None):
-        self.tetriminos = self.create() if tetriminos is None else tetriminos
+    @staticmethod
+    def create():
+        return [
+            Tetrimino(id=1, name='O-Block', shape=[[1, 1],
+                                                   [1, 1]]),
+            Tetrimino(id=2, name='I-Block', shape=[[0, 0, 0, 0],
+                                                   [2, 2, 2, 2],
+                                                   [0, 0, 0, 0],
+                                                   [0, 0, 0, 0]]),
+            Tetrimino(id=3, name='T-Block', shape=[[0, 3, 0],
+                                                   [3, 3, 3],
+                                                   [0, 0, 0]]),
+            Tetrimino(id=4, name='J-Block', shape=[[4, 0, 0],
+                                                   [4, 4, 4],
+                                                   [0, 0, 0]]),
+            Tetrimino(id=5, name='L-Block', shape=[[0, 0, 5],
+                                                   [5, 5, 5],
+                                                   [0, 0, 0]]),
+            Tetrimino(id=6, name='Z-Block', shape=[[6, 6, 0],
+                                                   [0, 6, 6],
+                                                   [0, 0, 0]]),
+            Tetrimino(id=7, name='S-Block', shape=[[0, 7, 7],
+                                                   [7, 7, 0],
+                                                   [0, 0, 0]])
+            ]
 
-    def create(self):
-        tetriminos = []
-        # O-block
-        tetriminos.append(Tetrimino(id=1, shape=[[1, 1],
-                                                 [1, 1]]))
-        # I-block
-        tetriminos.append(Tetrimino(id=2, shape=[[0, 0, 0, 0],
-                                                 [2, 2, 2, 2],
-                                                 [0, 0, 0, 0],
-                                                 [0, 0, 0, 0]]))
-        # T-block
-        tetriminos.append(Tetrimino(id=3, shape=[[0, 3, 0],
-                                                 [3, 3, 3],
-                                                 [0, 0, 0]]))
-        # J-block
-        tetriminos.append(Tetrimino(id=4, shape=[[4, 0, 0],
-                                                 [4, 4, 4],
-                                                 [0, 0, 0]]))
-        # L-block
-        tetriminos.append(Tetrimino(id=5, shape=[[0, 0, 5],
-                                                 [5, 5, 5],
-                                                 [0, 0, 0]]))
-        # Z-block
-        tetriminos.append(Tetrimino(id=6, shape=[[6, 6, 0],
-                                                 [0, 6, 6],
-                                                 [0, 0, 0]]))
-        # S-block
-        tetriminos.append(Tetrimino(id=7, shape=[[0, 7, 7],
-                                                 [7, 7, 0],
-                                                 [0, 0, 0]]))
-        return tetriminos
-
-    def random(self):
-        bag = deepcopy(self.tetriminos)
+    @staticmethod
+    def random():
+        bag = Bag.create()
         random.shuffle(bag)
         return bag
 
@@ -94,21 +81,19 @@ class Grid:
         self.cols = cols
         self.last_row = self.rows - 1
         self.last_col = self.cols - 1
-        self.grid = self.create()
         self.i = 0
-
         self.bag = bag
-        self.tetriminos = None
-        self.block: Tetrimino = None
-        self.next_block: Tetrimino = None
-        self.create_block()
+        self.reset()
+
+    def create(self):
+        return [[0 for col in range(self.cols)] for row in range(self.rows)]
+
+    def get(self, row, col):
+        return self.grid[row][col]
 
     def delete_row(self, row):
         self.grid.pop(row)
         self.grid.insert(0, [0] * self.cols)
-
-    def create(self):
-        return [[0 for col in range(self.cols)] for row in range(self.rows)]
 
     def reset(self):
         self.grid = self.create()
@@ -220,29 +205,9 @@ class Grid:
         self.set_block()
         return True
 
-    def __str__(self):
-        return self.grid
-
-    def __repr__(self):
-        return self.grid
-
-    def __getitem__(self, pos):
-        try:
-            row, col = pos
-            return self.grid[row][col]
-        except TypeError:
-            return self.grid[pos]
+    def __getitem__(self, row):
+        return self.grid[row]
 
     def __setitem__(self, key, value):
         row, col = key
         self.grid[row][col] = value
-
-    def __iter__(self):
-        return iter(self.grid)
-
-    def __next__(self):
-        i = self.i
-        self.i += 1
-        if i <= self.last_row:
-            return i
-        raise StopIteration

@@ -60,7 +60,7 @@ class Screen:
 
         return s
 
-    def draw(self):
+    def render(self):
         self.s.update()
 
         # while not self._quit:
@@ -75,10 +75,12 @@ class Screen:
         if self._quit:
             self.s.bye()
 
-        self.s.ontimer(self.draw)
+    def renderloop(self):
+        self.render()
+        self.s.ontimer(self.renderloop)
 
     def mainloop(self):
-        self.draw()
+        self.renderloop()
         self.s.mainloop()
 
     def create_pen(self):
@@ -109,7 +111,7 @@ class Screen:
             for col in range(self.grid.cols):
                 screen_x = x + (col * self.block_size)
                 screen_y = y - (row * self.block_size)
-                self.t.color(COLORS[self.grid[row, col]])
+                self.t.color(COLORS[self.grid.get(row, col)])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 
@@ -161,7 +163,10 @@ class Screen:
             for col in range(self.grid.next_block.width):
                 screen_x = x + (col * self.block_size)
                 screen_y = y - (row * self.block_size)
-                self.t.color(COLORS[self.grid.next_block.shape[row][col]])
+                try:
+                    self.t.color(COLORS[self.grid.next_block.shape[row][col]])
+                except IndexError:
+                    pass  # the rare case where the next block changes during rendering
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 

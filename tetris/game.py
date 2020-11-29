@@ -59,7 +59,10 @@ class Tetris:
         if not self.pause and not self.game_over:
             if self.grid.block.can_move:
                 self.grid.move(0, 1)
-            return self.check_state()
+            else:
+                self.clear_complete_rows()
+                if not self.is_game_over():
+                    self.grid.create_block()
 
     """ Game options """
 
@@ -78,33 +81,27 @@ class Tetris:
         self.level = 0
         self.lines = 0
 
-    def clean_complete_rows(self):
+    def clear_complete_rows(self):
         # when row columns are filled we need the clear them out (the rules of the game :))
-        lines_cleared = 0
+        rows_cleared = 0
         for row in range(self.grid.rows):
             if 0 not in self.grid[row]:
-                lines_cleared += 1
+                rows_cleared += 1
                 self.grid.delete_row(row)
-        return lines_cleared
 
-    def check_state(self):
-        lines_cleared = 0
-        if not self.grid.block.can_move:
-            lines_cleared = self.clean_complete_rows()
+        if rows_cleared > 0:
+            self.lines += rows_cleared
+            self.score += self.POINTS[rows_cleared] * (self.level + 1)
+            lines_to_level_up = 10 * (self.level + 1)
+            if self.lines >= lines_to_level_up:
+                self.level += 1
 
-            if lines_cleared > 0:
-                self.lines += lines_cleared
-                self.score += self.POINTS[lines_cleared] * (self.level + 1)
-                lines_to_level_up = 10 * (self.level + 1)
-                if self.lines >= lines_to_level_up:
-                    self.level += 1
+        return rows_cleared
 
-            if self.grid.block.row <= 0:
-                self.game_over = True
-            else:
-                self.grid.create_block()
-
-        return lines_cleared
+    def is_game_over(self):
+        if not self.grid.block.can_move and self.grid.block.row <= 0:
+            self.game_over = True
+        return self.game_over
 
     def move_left(self):
         if not self.game_over and not self.pause:
@@ -130,4 +127,6 @@ class Tetris:
         while self.move_down():
             pass
         if check_state:
-            return self.check_state()
+            self.clear_complete_rows()
+            if not self.is_game_over():
+                self.grid.create_block()
