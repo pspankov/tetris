@@ -1,8 +1,6 @@
-import math
 import random
 from enum import Enum
 
-from copy import deepcopy
 from tetris import transpose
 
 
@@ -42,9 +40,11 @@ class Tetrimino:
 
 
 class Bag:
-    @staticmethod
-    def create():
-        return [
+    def __init__(self):
+        self.blocks = []
+
+    def add_blocks(self):
+        self.blocks = [
             Tetrimino(id=1, name='O-Block', shape=[[1, 1],
                                                    [1, 1]]),
             Tetrimino(id=2, name='I-Block', shape=[[0, 0, 0, 0],
@@ -66,13 +66,20 @@ class Bag:
             Tetrimino(id=7, name='S-Block', shape=[[0, 7, 7],
                                                    [7, 7, 0],
                                                    [0, 0, 0]])
-            ]
+        ]
+        return self.blocks
 
-    @staticmethod
-    def random():
-        bag = Bag.create()
-        random.shuffle(bag)
-        return bag
+    def shuffle(self):
+        random.shuffle(self.blocks)
+        return self.blocks
+
+    def fill(self):
+        self.add_blocks()
+        self.shuffle()
+        return self.blocks
+
+    def empty(self):
+        self.blocks = []
 
 
 class Grid:
@@ -97,27 +104,9 @@ class Grid:
 
     def reset(self):
         self.grid = self.create()
-        self.tetriminos = None
         self.block = None
         self.next_block = None
-        self.create_block()
-
-    def create_block(self):
-        if not self.tetriminos:
-            self.tetriminos = self.bag.random()
-
-        if self.next_block is None:
-            self.block = self.tetriminos.pop()
-        else:
-            self.block = self.next_block
-
-        # calculate it's position - top center of the grid
-        col = math.floor(self.cols / 2) - math.ceil(self.block.width / 2)
-        self.block.col = col
-        self.next_block = self.tetriminos.pop()
-        self.set_block()
-
-        return self.block
+        self.bag.empty()
 
     def set_block(self):
         # set the current block on the grid

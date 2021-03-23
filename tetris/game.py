@@ -1,4 +1,5 @@
 import time
+import math
 
 
 class Tetris:
@@ -20,7 +21,8 @@ class Tetris:
     def __init__(self, grid, delay=True):
         self.grid = grid
 
-        self.pause = False
+        self.running = False
+        self.pause = True
         self.game_over = False
         self.quit = False
 
@@ -55,6 +57,30 @@ class Tetris:
             if delay:
                 time.sleep(self.get_game_speed())
 
+    # GAME OPTIONS
+    def start_game(self):
+        if not self.running:
+            self.reset_game()
+            self.running = True
+            self.play_pause()
+
+    def play_pause(self):
+        if not self.game_over and self.running:
+            self.pause = not self.pause
+
+    def reset_game(self):
+        self.grid.reset()
+        self.create_block()
+        self.pause = True
+        self.running = False
+        self.game_over = False
+
+        self.score = 0
+        self.level = 0
+        self.lines = 0
+
+    # GAME LOGIC
+
     def step(self):
         if not self.pause and not self.game_over:
             if self.grid.block.can_move:
@@ -62,24 +88,24 @@ class Tetris:
             else:
                 self.clear_complete_rows()
                 if not self.is_game_over():
-                    self.grid.create_block()
+                    self.create_block()
 
-    """ Game options """
+    def create_block(self):
+        if not self.grid.bag.blocks:
+            self.grid.bag.fill()
 
-    def play_pause(self):
-        if not self.game_over:
-            self.pause = not self.pause
+        if self.grid.next_block is None:
+            self.grid.block = self.grid.bag.blocks.pop()
         else:
-            self.reset_game()
+            self.grid.block = self.grid.next_block
 
-    def reset_game(self):
-        self.grid.reset()
-        self.pause = False
-        self.game_over = False
+        # calculate it's position - top center of the grid
+        col = math.floor(self.grid.cols / 2) - math.ceil(self.grid.block.width / 2)
+        self.grid.block.col = col
+        self.grid.next_block = self.grid.bag.blocks.pop()
+        self.grid.set_block()
 
-        self.score = 0
-        self.level = 0
-        self.lines = 0
+        return self.grid.block
 
     def clear_complete_rows(self):
         # when row columns are filled we need the clear them out (the rules of the game :))
@@ -102,6 +128,8 @@ class Tetris:
         if not self.grid.block.can_move and self.grid.block.row <= 0:
             self.game_over = True
         return self.game_over
+
+    # GAME MOVEMENT
 
     def move_left(self):
         if not self.game_over and not self.pause:
@@ -129,4 +157,4 @@ class Tetris:
         if check_state:
             self.clear_complete_rows()
             if not self.is_game_over():
-                self.grid.create_block()
+                self.create_block()

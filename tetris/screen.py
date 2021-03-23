@@ -48,6 +48,7 @@ class Screen:
         s.setup(width=self.width, height=self.height)
         s.tracer(0)
 
+        s.onkeypress(self.tetris.start_game, 'Return')
         s.onkeypress(self.tetris.play_pause, 'p')
         s.onkeypress(self.tetris.reset_game, 'r')
         s.onkeypress(self.tetris.move_left, 'a')
@@ -141,6 +142,7 @@ class Screen:
         self.static_pen.color(self.TEXT_COLOR)
         self.static_pen.goto(0 + self.block_size, -self.height / 3)
         info = 'Key commands: \r\n' \
+               '<Enter> start \n' \
                '<P> play/pause \n' \
                '<R> reset game \n' \
                '<A> move left \n' \
