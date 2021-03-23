@@ -24,19 +24,10 @@ class Tetris:
         self.grid = grid
         self.bag = bag
 
-        self.block = None
-        self.next_block = None
-
-        self.running = False
-        self.pause = True
-        self.game_over = False
         self.quit = False
-
-        self.score = 0
-        self.level = 0
-        self.lines = 0
-
         self.delay = delay
+
+        self.reset_game()
 
     def get_game_speed(self):
         if not self.delay:
@@ -64,32 +55,29 @@ class Tetris:
                 time.sleep(self.get_game_speed())
 
     # GAME OPTIONS
-    def start_game(self):
-        if not self.running:
-            self.create_block()
-            self.running = True
-            self.play_pause()
 
     def play_pause(self):
-        if not self.game_over and self.running:
+        if not self.game_over:
             self.pause = not self.pause
 
     def reset_game(self):
         self.grid.reset()
         self.bag.empty()
         self.pause = True
-        self.running = False
         self.game_over = False
 
         self.score = 0
         self.level = 0
         self.lines = 0
 
+        self.block = None
+        self.next_block = None
+
     # GAME LOGIC
 
     def step(self):
         if not self.pause and not self.game_over:
-            if self.block.can_move:
+            if self.block and self.block.can_move:
                 self.move(0, 1)
             else:
                 self.clear_complete_rows()
@@ -131,7 +119,7 @@ class Tetris:
         return rows_cleared
 
     def is_game_over(self):
-        if not self.block.can_move and self.block.row <= 0:
+        if self.block and not self.block.can_move and self.block.row <= 0:
             self.game_over = True
         return self.game_over
 

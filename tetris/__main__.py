@@ -7,10 +7,9 @@ from tetris.screen import Screen
 
 
 def main():
-    grid = Grid(20, 10)
     # mini_shapes = [shapes.MiniBlock, shapes.MiniOne, shapes.MiniTwo, shapes.MiniDiagTwo, shapes.MiniThree]
-    tetris = Tetris(grid, Bag())
-    screen = Screen(grid, tetris)
+    tetris = Tetris(Grid(20, 10), Bag())
+    screen = Screen(tetris)
 
     x = threading.Thread(target=tetris.mainloop, name='Tetris')
     x.start()

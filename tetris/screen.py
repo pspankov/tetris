@@ -19,12 +19,11 @@ class Screen:
     MIN_SCREEN_WIDTH = 420
     MIN_SCREEN_HEIGHT = 420
 
-    def __init__(self, grid: Grid, tetris: Tetris, block_size=20):
-        self.grid = grid
+    def __init__(self, tetris: Tetris, block_size=20):
         self.tetris = tetris
         self.block_size = block_size
-        self.grid_width = self.grid.cols * self.block_size
-        self.grid_height = self.grid.rows * self.block_size
+        self.grid_width = self.tetris.grid.cols * self.block_size
+        self.grid_height = self.tetris.grid.rows * self.block_size
 
         self.width = self.grid_width * 2 + self.block_size * 2
         self.height = self.grid_height + self.block_size * 2
@@ -48,7 +47,6 @@ class Screen:
         s.setup(width=self.width, height=self.height)
         s.tracer(0)
 
-        s.onkeypress(self.tetris.start_game, 'Return')
         s.onkeypress(self.tetris.play_pause, 'p')
         s.onkeypress(self.tetris.reset_game, 'r')
         s.onkeypress(self.tetris.move_left, 'a')
@@ -108,11 +106,11 @@ class Screen:
         x = -self.width / 2 + self.block_size + self.block_size / 2
         y = self.height / 2 - self.block_size - self.block_size / 2
 
-        for row in range(self.grid.rows):
-            for col in range(self.grid.cols):
+        for row in range(self.tetris.grid.rows):
+            for col in range(self.tetris.grid.cols):
                 screen_x = x + (col * self.block_size)
                 screen_y = y - (row * self.block_size)
-                self.t.color(COLORS[self.grid.get(row, col)])
+                self.t.color(COLORS[self.tetris.grid.get(row, col)])
                 self.t.goto(screen_x, screen_y)
                 self.t.stamp()
 
@@ -142,7 +140,6 @@ class Screen:
         self.static_pen.color(self.TEXT_COLOR)
         self.static_pen.goto(0 + self.block_size, -self.height / 3)
         info = 'Key commands: \r\n' \
-               '<Enter> start \n' \
                '<P> play/pause \n' \
                '<R> reset game \n' \
                '<A> move left \n' \
