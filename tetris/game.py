@@ -1,5 +1,7 @@
 import time
 import math
+from .blocks import Bag
+from .grid import Grid, Collision
 
 
 class Tetris:
@@ -18,8 +20,12 @@ class Tetris:
     # Game speed for levels from 0 to 9
     GAME_SPEED = [.799, .715, .632, .549, .466, .383, .300, .216, .133, .100]
 
-    def __init__(self, grid, delay=True):
+    def __init__(self, grid: Grid, bag: Bag, delay=True):
         self.grid = grid
+        self.bag = bag
+
+        self.block = None
+        self.next_block = None
 
         self.running = False
         self.pause = True
@@ -60,7 +66,7 @@ class Tetris:
     # GAME OPTIONS
     def start_game(self):
         if not self.running:
-            self.reset_game()
+            self.create_block()
             self.running = True
             self.play_pause()
 
@@ -70,7 +76,7 @@ class Tetris:
 
     def reset_game(self):
         self.grid.reset()
-        self.create_block()
+        self.bag.empty()
         self.pause = True
         self.running = False
         self.game_over = False
@@ -83,29 +89,29 @@ class Tetris:
 
     def step(self):
         if not self.pause and not self.game_over:
-            if self.grid.block.can_move:
-                self.grid.move(0, 1)
+            if self.block.can_move:
+                self.move(0, 1)
             else:
                 self.clear_complete_rows()
                 if not self.is_game_over():
                     self.create_block()
 
     def create_block(self):
-        if not self.grid.bag.blocks:
-            self.grid.bag.fill()
+        if not self.bag.blocks:
+            self.bag.fill()
 
-        if self.grid.next_block is None:
-            self.grid.block = self.grid.bag.blocks.pop()
+        if self.next_block is None:
+            self.block = self.bag.blocks.pop()
         else:
-            self.grid.block = self.grid.next_block
+            self.block = self.next_block
 
         # calculate it's position - top center of the grid
-        col = math.floor(self.grid.cols / 2) - math.ceil(self.grid.block.width / 2)
-        self.grid.block.col = col
-        self.grid.next_block = self.grid.bag.blocks.pop()
-        self.grid.set_block()
+        col = math.floor(self.grid.cols / 2) - math.ceil(self.block.width / 2)
+        self.block.col = col
+        self.next_block = self.bag.blocks.pop()
+        self.grid.set_block(self.block)
 
-        return self.grid.block
+        return self.block
 
     def clear_complete_rows(self):
         # when row columns are filled we need the clear them out (the rules of the game :))
@@ -125,30 +131,76 @@ class Tetris:
         return rows_cleared
 
     def is_game_over(self):
-        if not self.grid.block.can_move and self.grid.block.row <= 0:
+        if not self.block.can_move and self.block.row <= 0:
             self.game_over = True
         return self.game_over
 
     # GAME MOVEMENT
+    def move(self, col=0, row=0):
+        if not self.block.can_move:
+            return
+
+        self.grid.remove_block(self.block)
+        self.block.move(col, row)
+
+        if self.grid.collides(self.block):
+            self.block.move(-col, -row)
+            self.grid.set_block(self.block)
+            if col == 0:  # if it's moved down
+                self.block.can_move = False
+            return False
+        else:
+            self.grid.set_block(self.block)
+            return True
 
     def move_left(self):
         if not self.game_over and not self.pause:
-            return self.grid.move(-1, 0)
+            return self.move(-1, 0)
 
     def move_right(self):
         if not self.game_over and not self.pause:
-            return self.grid.move(1, 0)
+            return self.move(1, 0)
 
     def move_down(self):
         if not self.game_over and not self.pause:
-            moved = self.grid.move(0, 1)
+            moved = self.move(0, 1)
             if moved:
                 self.score += 1
             return moved
 
     def rotate(self):
         if not self.game_over and not self.pause:
-            self.grid.rotate()
+            if not self.block.can_move:
+                return
+
+            self.grid.remove_block(self.block)
+            self.block.rotate()
+
+            # fix cases where block can't rotate if all the way to the left or right
+
+            # if block is next to left wall move to the right and then rotate
+            collision = self.grid.collides(self.block)
+            if collision == Collision.LEFT_WALL:
+                for i in range(self.block.width):
+                    self.block.move(1, 0)
+                    if not self.grid.collides(self.block):
+                        break
+
+            # if block is next to right wall move to the left and then rotate
+            if collision == Collision.RIGHT_WALL:
+                for i in range(self.block.width):
+                    self.block.move(-1, 0)
+                    if not self.grid.collides(self.block):
+                        break
+
+            if self.grid.collides(self.block):
+                # rotating 3 times returns it to it's original position
+                self.block.rotate(3)
+                self.grid.set_block(self.block)
+                return False
+
+            self.grid.set_block(self.block)
+            return True
 
     def drop(self, check_state=True):
         """ Drop block all way down """

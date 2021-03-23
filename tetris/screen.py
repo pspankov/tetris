@@ -155,18 +155,18 @@ class Screen:
         self.static_pen.up()
 
     def draw_next_block(self):
-        if not self.grid.next_block:
+        if not self.tetris.next_block:
             return
 
         x = self.block_size * 2
         y = int(self.height / 2 - self.block_size * 2)
 
-        for row in range(self.grid.next_block.height):
-            for col in range(self.grid.next_block.width):
+        for row in range(self.tetris.next_block.height):
+            for col in range(self.tetris.next_block.width):
                 screen_x = x + (col * self.block_size)
                 screen_y = y - (row * self.block_size)
                 try:
-                    self.t.color(COLORS[self.grid.next_block.shape[row][col]])
+                    self.t.color(COLORS[self.tetris.next_block.shape[row][col]])
                 except IndexError:
                     pass  # the rare case where the next block changes during rendering
                 self.t.goto(screen_x, screen_y)
